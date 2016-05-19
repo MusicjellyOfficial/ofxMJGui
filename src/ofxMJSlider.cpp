@@ -8,11 +8,17 @@
 
 #include "ofxMJSlider.h"
 
+
+//--------------------------------------------------------------
 ofxMJSlider::ofxMJSlider() {
     mode.mode = mode.normal; //defaults to normal mode
 }
 
-void ofxMJSlider::setup(float _x, float _y, float _minValue, float _maxValue, bool _visible, float _currentValue, float _size, bool _horizontal) {
+
+//--------------------------------------------------------------
+void ofxMJSlider::setup(int _ID, float _x, float _y, float _minValue, float _maxValue, bool _visible, float _currentValue, float _size, bool _horizontal) {
+    
+    ID = _ID;
     
     x = _x;
     y = _y;
@@ -39,15 +45,14 @@ void ofxMJSlider::setup(float _x, float _y, float _minValue, float _maxValue, bo
     
     visible = _visible;
     
-    //these have to be in an instance method NOT a constructor
-    ofAddListener(ofEvents().mousePressed, this, &ofxMJSlider::mousePressed);
-    ofAddListener(ofEvents().mouseReleased, this, &ofxMJSlider::mouseReleased);
-    ofAddListener(ofEvents().mouseDragged, this, &ofxMJSlider::mouseDragged);
+    ofRegisterMouseEvents(this, OF_EVENT_ORDER_BEFORE_APP);
 }
 
-void ofxMJSlider::setupTwin(float _x, float _y, float _minValue, float _maxValue, bool _visible, float _smallerValue, float _largerValue, float size, bool _horizontal ) {
+
+//--------------------------------------------------------------
+void ofxMJSlider::setupTwin(int _ID, float _x, float _y, float _minValue, float _maxValue, bool _visible, float _smallerValue, float _largerValue, float size, bool _horizontal ) {
     
-    setup(_x, _y, _minValue, _maxValue, _visible, 0, size, _horizontal);
+    setup(_ID, _x, _y, _minValue, _maxValue, _visible, 0, size, _horizontal);
     
     mode.mode = mode.twin;
     
@@ -68,18 +73,26 @@ void ofxMJSlider::setupTwin(float _x, float _y, float _minValue, float _maxValue
     
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::setMinMaxPos(float base, float size) {
     dotMinPos = base + dotRadius;
-    dotMaxPos = base + size - 2 * dotRadius;
+    dotMaxPos = base + size - dotRadius;
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::draw() {
     if (visible) {
         if (mode.mode == mode.normal) {
-            ofSetColor(30);
+            ofSetColor(255);
             ofDrawRectRounded(x, y, width, height, height / 2);
             ofSetColor(0);
             ofDrawCircle(dotX, dotY, dotRadius);
+            if( dotImage.isAllocated() ){
+                ofSetColor(255);
+                dotImage.draw(dotX, dotY);
+            }
         } else {
             ofSetColor(30);
             ofDrawRectRounded(x, y, width, height, height / 2);
@@ -90,6 +103,8 @@ void ofxMJSlider::draw() {
     }
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::mouseDragged(ofMouseEventArgs &e) {
     if (isPressed) {
         if ( mode.mode == mode.normal ) {
@@ -114,6 +129,8 @@ void ofxMJSlider::mouseDragged(ofMouseEventArgs &e) {
     }
 }
 
+
+//--------------------------------------------------------------
 float ofxMJSlider::getNewDotPos(float newPos, float minPos, float maxPos) {
     float result = 0;
     if ( newPos >= minPos && newPos <= maxPos ) {
@@ -126,6 +143,8 @@ float ofxMJSlider::getNewDotPos(float newPos, float minPos, float maxPos) {
     return result;
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::mousePressed(ofMouseEventArgs& e) {
     //in normal mode, as long as the user has clicked anywhere on the slider the dot will move to that point
     //in twin mode, the user has to explicitly click on a dot
@@ -144,6 +163,8 @@ void ofxMJSlider::mousePressed(ofMouseEventArgs& e) {
     }
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::mouseReleased(ofMouseEventArgs &e) {
     if (isPressed) {
         isPressed = false;
@@ -153,53 +174,77 @@ void ofxMJSlider::mouseReleased(ofMouseEventArgs &e) {
     }
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::setVisibility(bool _visible) {
     visible = _visible;
 }
 
-void ofxMJSlider::updateValue() {
-    if ( mode.mode == mode.normal ) { //normal mode
-        value = getMappedValue(dotX);
-        ofNotifyEvent(valueChanged, value);
-    } else { //twin mode
-        float tempSmaller = (horizontal) ? getMappedValue(smallerDotX) : getMappedValue(smallerDotY);
-        float tempLarger = (horizontal) ? getMappedValue(largerDotX) : getMappedValue(largerDotY);
-        if ( tempSmaller != smallerValue ) {
-            smallerValue = tempSmaller;
-            ofNotifyEvent(smallerValueChanged, smallerValue);
-        }
-        if ( tempLarger != largerValue ) {
-            largerValue = tempLarger;
-            ofNotifyEvent(largerValueChanged, largerValue);
-        }
+
+//--------------------------------------------------------------
+bool ofxMJSlider::setImage(string path){
+    bool result = dotImage.load(path);
+    
+    if(result){
+        dotImage.resize(dotRadius * 1.4, dotRadius * 1.4);
+        dotImage.setAnchorPoint(dotRadius * 0.7, dotRadius * 0.7);
     }
+    
+    return result;
 }
 
+//--------------------------------------------------------------
+void ofxMJSlider::updateValue() {
+    if ( mode.mode == mode.normal ) { //normal mode
+        
+        value = getMappedValue(dotX);
+
+    } else { //twin mode
+        
+        smallerValue = (horizontal) ? getMappedValue(smallerDotX) : getMappedValue(smallerDotY);
+        largerValue = (horizontal) ? getMappedValue(largerDotX) : getMappedValue(largerDotY);
+
+    }
+    ofNotifyEvent(triggerEvent, ID);
+}
+
+
+//--------------------------------------------------------------
 float ofxMJSlider::getValue() {
     return value;
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::getValues(float& _smallerValue, float& _largerValue) {
     _smallerValue = smallerValue;
     _largerValue = largerValue;
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::setValues(float _smallerValue, float _largerValue) {
     smallerValue = _smallerValue;
     largerValue = _largerValue;
     updateDotPosition();
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::setSmallerValue(float _smallerValue) {
     smallerValue = _smallerValue;
     updateDotPosition();
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::setLargerValue(float _largerValue) {
     largerValue = _largerValue;
     updateDotPosition();
 }
 
+
+//--------------------------------------------------------------
 void ofxMJSlider::updateDotPosition() {
     if ( mode.mode == mode.normal ) {
         value = getMappedDotPos(value);
@@ -214,14 +259,18 @@ void ofxMJSlider::updateDotPosition() {
     }
 }
 
+
+//--------------------------------------------------------------
 bool ofxMJSlider::hasBeenClicked(float mouseX, float mouseY) {
-    if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
+    if (mouseX >= x && mouseX <= x + width && mouseY >= y - dotRadius && mouseY <= y + dotRadius) {
         return true;
     } else {
         return false;
     }
 }
 
+
+//--------------------------------------------------------------
 int ofxMJSlider::dotHasBeenClicked(float mouseX, float mouseY) {
     int result = -1; //-1 indicates neither has been clicked
     float smallerDist = ofDist(mouseX, mouseY, smallerDotX, smallerDotY);
@@ -235,6 +284,8 @@ int ofxMJSlider::dotHasBeenClicked(float mouseX, float mouseY) {
     return result;
 }
 
+
+//--------------------------------------------------------------
 float ofxMJSlider::getMappedValue(float value) {
     //if ( mode.mode == mode.normal ) {
     return ofMap(value, dotMinPos, dotMaxPos, minValue, maxValue);
@@ -249,6 +300,8 @@ float ofxMJSlider::getMappedValue(float value) {
     
 }
 
+
+//--------------------------------------------------------------
 float ofxMJSlider::getMappedDotPos(float value) {
     return ofMap(value, minValue, maxValue, dotMinPos, dotMaxPos);
 }

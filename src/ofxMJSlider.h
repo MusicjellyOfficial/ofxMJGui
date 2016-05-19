@@ -9,8 +9,13 @@
 #ifndef ofxMJSlider_h
 #define ofxMJSlider_h
 
-#include "ofMain.h"
+//#include "ofMain.h"
 #include <stdio.h>
+
+#include "ofConstants.h"
+#include "ofBaseTypes.h"
+#include "ofGraphics.h"
+#include "ofImage.h"
 
 struct ofxMJSliderMode {
     const std::string normal = "NORMAL";
@@ -22,23 +27,32 @@ class ofxMJSlider {
 public:
     ofxMJSlider();
     //normal mode
-    void setup(float _x, float _y, float _minValue, float _maxValue, bool _visible, float _currentValue, float size, bool _horizontal);
+    void setup(int _ID, float _x, float _y, float _minValue, float _maxValue, bool _visible, float _currentValue, float size, bool _horizontal);
     // twin mode
-    void setupTwin(float _x, float _y, float _minValue, float _maxValue, bool _visible, float _smallerValue, float _largerValue, float size, bool _horizontal);
+    void setupTwin(int _ID, float _x, float _y, float _minValue, float _maxValue, bool _visible, float _smallerValue, float _largerValue, float size, bool _horizontal);
     void setMinMaxPos(float base, float size);
     
     void draw();
     
-    ofEvent<float>valueChanged;
-    ofEvent<float>smallerValueChanged;
-    ofEvent<float>largerValueChanged;
+    template<class ListenerClass, typename ListenerMethod>
+    void addListener(ListenerClass * listener, ListenerMethod method){
+        ofAddListener(triggerEvent, listener, method);
+    }
     
     //events
     void mouseDragged(ofMouseEventArgs& e);
     void mousePressed(ofMouseEventArgs& e);
     void mouseReleased(ofMouseEventArgs& e);
+
+    void mouseMoved(ofMouseEventArgs& e){ }
+    void mouseScrolled(ofMouseEventArgs& e){ }
+    void mouseEntered(ofMouseEventArgs& e){ }
+    void mouseExited(ofMouseEventArgs& e){ }
+    
     
     void setVisibility(bool _isVisible);
+    
+    bool setImage(string path);
     
     //value
     void updateValue();
@@ -49,6 +63,9 @@ public:
     void setSmallerValue(float _smallerValue);
     void setLargerValue(float _largerValue);
 private:
+    
+    ofEvent<int>triggerEvent;
+    
     void updateDotPosition();
     bool hasBeenClicked(float mouseX, float mouseY);
     int dotHasBeenClicked(float mouseX, float mouseY);
@@ -56,7 +73,7 @@ private:
     float getMappedValue(float value);
     float getMappedDotPos(float value);
     
-    int category;
+    int ID = -1;//indicates that it hasn't changed
     float x;
     float y;
     float width = 3;
@@ -85,6 +102,7 @@ private:
     
     bool isPressed = false;
     bool visible = false;
+    ofImage dotImage;
     
     ofxMJSliderMode mode;
     

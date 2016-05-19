@@ -2,16 +2,42 @@
 //  ofxMJButton.cpp
 //  MJServer
 //
-//  Created byOscar Wyatt on 31/03/2016.
+//  Created by Oscar Wyatt on 31/03/2016.
 //
 //
 
 #include "ofxMJButton.h"
 
-//default constructor
-ofxMJButton::ofxMJButton(){}
 
-void ofxMJButton::setup(string _shape, string _contentType, string _contentStr, string _textSize, float _x, float _y, float _widthOrRadius, float _height, bool _visible){
+//--------------------------------------------------------------
+template<typename Type>
+ofxMJButton<Type>::ofxMJButton(){}
+
+
+//--------------------------------------------------------------
+template<typename Type>
+ofxMJButton<Type>::~ofxMJButton(){}
+
+
+////--------------------------------------------------------------
+//template<typename Type>
+//Type ofxMJButton<Type>::operator=(Type v){
+//    value = v;
+//    return v;
+//}
+//
+//
+////--------------------------------------------------------------
+//template<class ListenerClass, typename ListenerMethod>
+//template<typename Type>
+//Type ofxMJButton<Type>::operator const Type & (){
+//    return value;
+//}
+
+
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::setup(string _shape, string _contentType, string _contentStr, string _textSize, float _x, float _y, float _widthOrRadius, float _height, bool _visible){
     shape = _shape;
     contentType = _contentType;
     visible = _visible;
@@ -48,7 +74,6 @@ void ofxMJButton::setup(string _shape, string _contentType, string _contentStr, 
             helvetica.load("helvetica.otf", 28);
         }
         
-        
         float textWidth = helvetica.stringWidth(text);
         float textHeight = helvetica.stringHeight(text);
         
@@ -61,25 +86,39 @@ void ofxMJButton::setup(string _shape, string _contentType, string _contentStr, 
             contentY = (y + height / 2) + textHeight / 2;
         }
     }
-    //these have to be in an instance method NOT a constructor
-    ofAddListener(ofEvents().mousePressed, this, &ofxMJButton::mousePressed);
-    ofAddListener(ofEvents().mouseReleased, this, &ofxMJButton::mouseReleased);
+
+    ofRegisterMouseEvents(this, OF_EVENT_ORDER_BEFORE_APP);
 }
 
 
-void ofxMJButton::setReleasedFillColor(ofColor color){
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::setReleasedFillColor(ofColor color){
     releasedFillColor = color;
 }
 
 
-void ofxMJButton::setColors(ofColor _pressedColor, ofColor _releasedColor, ofColor _pressedFillColor, ofColor _releasedFillColor){
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::setColors(ofColor _pressedColor, ofColor _releasedColor, ofColor _pressedFillColor, ofColor _releasedFillColor){
     pressedColor = _pressedColor;
     releasedColor = _releasedColor;
     pressedFillColor = _pressedFillColor;
     releasedFillColor = _releasedFillColor;
 }
 
-void ofxMJButton::setSwitchMode(bool _switchMode, bool initialValue, ofColor onColor, ofColor offColor, ofColor onFillColor, ofColor offFillColor){
+
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::setStrokeColors(ofColor _pressedStrokeColor, ofColor _releasedStrokeColor){
+    pressedStrokeColor = _pressedStrokeColor;
+    releasedStrokeColor = _releasedStrokeColor;
+}
+
+
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::setSwitchMode(bool _switchMode, bool initialValue, ofColor onColor, ofColor offColor, ofColor onFillColor, ofColor offFillColor){
     switchMode = _switchMode;
     switchValue = initialValue;
     pressedColor = onColor;
@@ -88,9 +127,12 @@ void ofxMJButton::setSwitchMode(bool _switchMode, bool initialValue, ofColor onC
     releasedFillColor = offFillColor;
 }
 
+
+//--------------------------------------------------------------
 //@brief: set the button to show some detail text rather than behave like a normal button
 //at the moment only works if button is rectangle
-void ofxMJButton::setDetailMode(bool _detailMode, string text){
+template<typename Type>
+void ofxMJButton<Type>::setDetailMode(bool _detailMode, string text){
     if(shape == RECTANGLE){
         detailMode = _detailMode;
         detailText = text;
@@ -105,8 +147,11 @@ void ofxMJButton::setDetailMode(bool _detailMode, string text){
     }
 }
 
+
+//--------------------------------------------------------------
 //@brief: draw the button. Returns any extra y offset that should be sent to any further buttons. It will pass on any value it gets unless it should be greater
-float ofxMJButton::draw(float _yOffset){
+template<typename Type>
+float ofxMJButton<Type>::draw(float _yOffset){
     if(visible){
         yOffset = _yOffset;
         //update yOffset for comparision when checking if it has been drawn
@@ -114,19 +159,45 @@ float ofxMJButton::draw(float _yOffset){
         //if we're showing detail, we need different dimensions
         float drawWidth = (showDetail) ? detailWidth : width;
         float drawHeight = (showDetail) ? detailHeight : height;
-        
-        if(isPressed || (switchMode && switchValue) ){
-            ofSetColor(pressedFillColor);
-        } else {
-            ofSetColor(releasedFillColor);
-        }
+
 
         if(shape == CIRCLE){
-            ofNoFill();
+            ofFill();
+            
+            if(isPressed || (switchMode && switchValue) ){
+                ofSetColor(pressedFillColor);
+            } else {
+                ofSetColor(releasedFillColor);
+            }
+            
             ofDrawCircle(x, y + yOffset, radius);
+            //first draw the filled circle
+            
+            ofNoFill();
+            
+            if(isPressed || (switchMode && switchValue) ){
+                ofSetColor(pressedStrokeColor);
+            } else {
+                ofSetColor(releasedStrokeColor);
+            }
+            
+            ofDrawCircle(x, y + yOffset, radius);
+            //second draw an unfilled circle which has a stroke color
+            
+            
         } else {
             ofFill();
+            
+            if(isPressed || (switchMode && switchValue) ){
+                ofSetColor(pressedFillColor);
+            } else {
+                ofSetColor(releasedFillColor);
+            }
+            
             ofDrawRectRounded(x, y + yOffset, drawWidth, drawHeight, 3);
+            //first draw the filled rect
+            
+            
         }
         
         if(isPressed || (switchMode && switchValue) ){
@@ -158,36 +229,100 @@ float ofxMJButton::draw(float _yOffset){
 }
 
 
-
-void ofxMJButton::mousePressed(ofMouseEventArgs& e){
-    if( hasBeenClicked(e.x, e.y) ){
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::mousePressed(ofMouseEventArgs& e){
+    if( visible && hasBeenClicked(e.x, e.y) ){
         isPressed = true;
     } else {
         isPressed = false;
     }
 }
 
-void ofxMJButton::mouseReleased(ofMouseEventArgs& e){
+
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::mouseReleased(ofMouseEventArgs& e){
     isPressed = false;
-    if( hasBeenClicked(e.x, e.y) ){
+    if( visible && hasBeenClicked(e.x, e.y) ){
         if( detailMode ){
             showDetail = !showDetail;
         } else {
             //if it's in detail mode don't trigger any notifications
-            if(switchMode) switchValue = !switchValue;
+//            if(switchMode) switchValue = !switchValue;
+//            value = !value;
             handleMouseReleased();
         }
-        
     }
 }
 
-void ofxMJButton::handleMouseReleased(){
-    int foo = 0;
-    ofNotifyEvent(wasReleased, foo, this);
+
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::handleMouseReleased(){
+    Type val = value.get();
+    ofNotifyEvent(triggerEvent, val );
 }
 
 
-bool ofxMJButton::hasBeenClicked(float mouseX, float mouseY){
+
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::setVisible(bool _visible){
+    visible = _visible;
+}
+
+
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::setSwitchValue(bool _value){
+    switchValue = _value;
+}
+
+
+//--------------------------------------------------------------
+template<typename Type>
+float ofxMJButton<Type>::getX(){
+    return x;
+}
+
+
+//--------------------------------------------------------------
+template<typename Type>
+float ofxMJButton<Type>::getY(){
+    return y;
+}
+
+
+//--------------------------------------------------------------
+template<typename Type>
+void ofxMJButton<Type>::setValue( Type _value){
+    value = _value;
+}
+
+
+////--------------------------------------------------------------
+//template<typename Type>
+//float ofxMJButton<Type>::setBoolValue( bool value){
+//    return y;
+//}
+
+template class ofxMJButton<bool>;
+template class ofxMJButton<int>;
+
+
+
+
+
+//--------------------------------------------------------------
+//  PRIVATE
+//--------------------------------------------------------------
+#pragma MARK - PRIVATE
+
+
+//--------------------------------------------------------------
+template<typename Type>
+bool ofxMJButton<Type>::hasBeenClicked(float mouseX, float mouseY){
     bool result = false;
     if(visible){
         if(shape == CIRCLE){
@@ -218,21 +353,4 @@ bool ofxMJButton::hasBeenClicked(float mouseX, float mouseY){
     }
     
     return result;
-}
-
-void ofxMJButton::setVisible(bool _visibile){
-    visible = _visibile;
-}
-
-void ofxMJButton::setSwitchValue(bool value){
-    switchValue = value;
-}
-
-//these are fairly self explanatory
-float ofxMJButton::getX(){
-    return x;
-}
-
-float ofxMJButton::getY(){
-    return y;
 }
