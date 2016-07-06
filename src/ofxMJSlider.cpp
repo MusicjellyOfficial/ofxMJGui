@@ -96,7 +96,7 @@ void ofxMJSlider::draw() {
         } else {
             ofSetColor(30);
             ofDrawRectRounded(x, y, width, height, height / 2);
-            ofSetColor(0);
+            ofSetColor(255);
             ofDrawCircle(smallerDotX, smallerDotY, dotRadius);
             ofDrawCircle(largerDotX, largerDotY, dotRadius);
         }
