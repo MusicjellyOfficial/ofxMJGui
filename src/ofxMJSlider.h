@@ -31,6 +31,8 @@ public:
     // twin mode
     void setupTwin(int _ID, float _x, float _y, float _minValue, float _maxValue, bool _visible, float _smallerValue, float _largerValue, float size, bool _horizontal);
     void setMinMaxPos(float base, float size);
+
+
     
     void draw();
     
@@ -62,6 +64,8 @@ public:
     void setValues(float smallerValue, float largerValue);
     void setSmallerValue(float _smallerValue);
     void setLargerValue(float _largerValue);
+	void setMinValue(float _minValue);
+	void setMaxValue(float _maxValue);
 private:
     
     ofEvent<int>triggerEvent;

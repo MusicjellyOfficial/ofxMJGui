@@ -245,6 +245,20 @@ void ofxMJSlider::setLargerValue(float _largerValue) {
 
 
 //--------------------------------------------------------------
+void ofxMJSlider::setMinValue(float _minValue) {
+	minValue = _minValue;
+	updateDotPosition();
+}
+
+
+//--------------------------------------------------------------
+void ofxMJSlider::setMaxValue(float _maxValue) {
+	maxValue = _maxValue;
+	updateDotPosition();
+}
+
+
+//--------------------------------------------------------------
 void ofxMJSlider::updateDotPosition() {
     if ( mode.mode == mode.normal ) {
         value = getMappedDotPos(value);
